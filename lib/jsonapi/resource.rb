@@ -367,17 +367,6 @@ module JSONAPI
     end
 
     def _replace_fields(field_data)
-      field_data[:attributes].each do |attribute, value|
-        begin
-          send "#{attribute}=", value
-          @save_needed = true
-        rescue ArgumentError
-          # :nocov: Will be thrown if an enum value isn't allowed for an enum. Currently not tested as enums are a rails 4.1 and higher feature
-          raise JSONAPI::Exceptions::InvalidFieldValue.new(attribute, value)
-          # :nocov:
-        end
-      end
-
       field_data[:to_one].each do |relationship_type, value|
         if value.nil?
           remove_to_one_link(relationship_type)
@@ -394,6 +383,17 @@ module JSONAPI
       field_data[:to_many].each do |relationship_type, values|
         replace_to_many_links(relationship_type, values)
       end if field_data[:to_many]
+
+      field_data[:attributes].each do |attribute, value|
+        begin
+          send "#{attribute}=", value
+          @save_needed = true
+        rescue ArgumentError
+          # :nocov: Will be thrown if an enum value isn't allowed for an enum. Currently not tested as enums are a rails 4.1 and higher feature
+          raise JSONAPI::Exceptions::InvalidFieldValue.new(attribute, value)
+          # :nocov:
+        end
+      end
 
       :completed
     end
